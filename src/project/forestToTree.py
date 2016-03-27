@@ -5,7 +5,7 @@ Created on 2016年3月15日
 '''
 #-*- coding: utf-8 -*-
 
-from project.treeLib import *
+from project.allLib import *
 
 #利用系统调用链库的信息建立包含所有系统调用的树,储存在一个数组中
 def forestToTree(trees):
@@ -31,5 +31,4 @@ def forestToTree(trees):
             else :
                 raise ValueError
         currentNode = nodeList[0]
-    return nodeList
-    
+    return nodeList    

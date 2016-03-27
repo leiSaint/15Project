@@ -24,3 +24,6 @@ NtCallsTree = [['NtOpenFile', 'NtClose', 'LeafOpenFile'],
                ['NtOpenFile', 'NtSetInformationFile.FileBasicInformation', 'NtClose', 'LeafChangeFileAttr'],
                ['NtOpenFile', 'NtQueryInformationFile.FileAttributeTagInformation', 'NtSetInformationFile.FileDispositionInformation', 'NtClose', 'LeafDeleteFile']
                ]
+
+#定义各个系统调用node的创建方式，包括关注的参数及该参数对应的正则表达式和要去掉的字符
+parseDict = {'NtCreateFile': [{12:'=> .*? ', 'strip': '=> '},{11:'succeed|failed'},{2:'\?\?.*?\"','strip':'\?\?\"'}]}
