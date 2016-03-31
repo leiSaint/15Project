@@ -53,7 +53,7 @@ def parseLogToNodes(logPath, parseDict):
                         node.successStatus = realPara
                     if paraCount == 2:
                         node.concernedPara = realPara                                                        
-                    paraCount =+ 1
+                    paraCount += 1
                 #将填充完的node添加至列表
                 NtCallNodes.append(node)
     return NtCallNodes             
