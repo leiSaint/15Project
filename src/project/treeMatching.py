@@ -3,8 +3,11 @@ Created on 2016年3月20日
 
 @author: lei
 '''
-from project.forestToTree import *
 from project.allLib import *
+from project.defDataStruct import *
+from project.parseLogToNodes import parseLogToNodes
+
+logPath = r"/Users/lei/Desktop/15Project/report/drstrace.create.exe.08960.0000.log"
 
 #测试用此例子，以后用预处理.log文件后的结果替换
 NtCalls = ['NtOpenFile', 'NtClose','NtOpenFile', 'NtSetInformationFile.FileBasicInformation', 'NtClose',
@@ -12,24 +15,49 @@ NtCalls = ['NtOpenFile', 'NtClose','NtOpenFile', 'NtSetInformationFile.FileBasic
                ]
 
 #先生成树
-behaviorTree = forestToTree(NtCallsTree)
-node = behaviorTree[0]
+searchTree = Tree()
+searchTree.buildTree(NtCallsTree)
 
-#比较新读入节点和所有根节点，以及所有currentNodes的第一层左子树和左子树的所有第一层右子树，返回应创建新的API头还是继续遍历当前分支
-#def matchingAllChild(newNode, currentNodes):
-    
+def find(curNode, newCall):
+        #当前节点不可能为正在查找的节点，因为是从根节点开始查询的
+        curNode = curNode.treeNode
+        if len(curNode.leftChild) == 0:
+            return 0
+        elif curNode.leftChild[0].callName == newCall.callName:
+            return curNode.leftChild[0]
+        elif len(curNode.leftChild[0].rightChild) == 0:
+            return 0
+        elif curNode.leftChild[0].rightChild != []:
+            for i in range(len(curNode.leftChild[0].rightChild)):
+                if curNode.leftChild[0].rightChild[i] == newCall:
+                    return curNode.leftChild[0].rightChild[i]
+        else:
+            return 0
+                
+#解析log文件得到所有节点
+allStraces = parseLogToNodes(logPath, parseDict)
+
+#开始匹配
 def treeMatching(allStraces, tree):
     #因为可能有多个API同时执行，所以要用数组保存每个API执行至的当前节点
     curMatchingIndex = 0    
     curMatchingNodes = []
-    curMatchingNode = tree[0]
-    curMatchingNodes.append(curMatchingNode)
-    for call in allStraces:     
-        if call == curMatchingNode.callName:
-            print(curMatchingNode.callName)
-            curMatchingNode = curMatchingNode.leftChild
-            if curMatchingNode.callName[:3] == 'Leaf' and curMatchingNode.leftChild == None and curMatchingNode.rightChild == None:
-                print(curMatchingNode.callName)
-        #else:
+    curTreeRoot = MatchingNode(tree.root, 0)
+    for call in allStraces:        
+        if len(curMatchingNodes) == 0:
+            curMatchingNode = MatchingNode(tree.root, call.dependencyPara)
+            curMatchingNodes.append(curMatchingNode)
+        for i in range(len(curMatchingNodes)):
+            if call.dependencyPara == curMatchingNode.dependencyPara:
+                if find(curMatchingNode, call) != 0:
+                    curMatchingNode.treeNode = find(curMatchingNode,call)
+                    curMatchingNodes[i] = curMatchingNode
+            else:
+                if find(curTreeRoot, call) != 0:
+                    curMatchingNode = MatchingNode(find(tree.root, call), call.dependencyPara)
+                    curMatchingNodes.append(curMatchingNode)
+            if call.successStatus == 'failed' or curMatchingNode.treeNode.leftChild[0].callName[:4] == 'leaf' and len(curMatchingNode.treeNode.leftChild[0].rightChild) == 0:
+                print(curMatchingNode.treeNode.leftChild[0].callName)
+                curMatchingNodes.pop(i)
 
-treeMatching(NtCalls, behaviorTree)
+treeMatching(allStraces, searchTree)

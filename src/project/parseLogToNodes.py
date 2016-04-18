@@ -7,11 +7,7 @@ Created on 2016年3月27日
 from project.defDataStruct import logNode
 from project.allLib import *
 import re
-
 logPath = r"/Users/lei/Desktop/15Project/report/drstrace.create.exe.08960.0000.log"
-
-
-
 def parseLogToNodes(logPath, parseDict):
     NtCallNodes = []
     with open(logPath, 'r') as logFile:
@@ -56,6 +52,9 @@ def parseLogToNodes(logPath, parseDict):
                     paraCount += 1
                 #将填充完的node添加至列表
                 NtCallNodes.append(node)
-    return NtCallNodes             
-                
-parseLogToNodes(logPath, parseDict)
+    return NtCallNodes
+
+'''nodes = parseLogToNodes(logPath, parseDict)
+print(len(nodes))
+for node in nodes:
+    print(node.concernedPara, node.dependencyPara, node.successStatus)'''             

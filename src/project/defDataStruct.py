@@ -4,7 +4,7 @@ Created on 2016年3月6日
 @author: lei
 '''
 #-*- coding: utf-8 -*-
-#from project.allLib import NtCallsTree, NtCallDict
+from project.allLib import NtCallsTree
 
 
 class TreeNode(object):
@@ -57,24 +57,6 @@ class Tree(object):
         for tree in trees:
             self.add(tree)
 
-NtCallDict = {
-              'NtOpenFile':TreeNode('NtOpenFile'),
-              'NtClose':TreeNode('NtClose'), 
-              'NtSetInformationFile.FileBasicInformation':TreeNode('NtSetInformationFile.FileBasicInformation'), 
-              'NtQueryInformationFile.FileAttributeTagInformation':TreeNode('NtQueryInformationFile.FileAttributeTagInformation'), 
-              'NtSetInformationFile.FileDispositionInformation':TreeNode('NtSetInformationFile.FileDispositionInformation'), 
-              'LeafChangeFileAttr':TreeNode('Change file attribute'), 
-              'LeafDeleteFile':TreeNode('Delete file'), 
-              'LeafOpenFile':TreeNode('Open file')
-}
-
-#建立系统调用链库，从链的第一个调用开始，到该链代表的API名字节点结束
-NtCallsTree = [['NtOpenFile', 'NtClose', 'LeafOpenFile'],
-               ['NtOpenFile', 'NtSetInformationFile.FileBasicInformation', 'NtClose', 'LeafChangeFileAttr']
-               ]        
-            
-                                  
-
 class logNode(object):
     '解析log文件获取到的节点类，包含了函数名和获得到的各项参数'
     def __init__(self, callName):
@@ -83,4 +65,10 @@ class logNode(object):
     dependencyPara = ''
     concernedPara = ''
     successStatus = ''
+    
+class MatchingNode(object):
+    '匹配查找时使用的节点，包含了树节点，数据依赖的值'
+    def __init__(self, treeNode, dependencyPara):
+        self.treeNode = treeNode
+        self.dependencyPara = dependencyPara
     
