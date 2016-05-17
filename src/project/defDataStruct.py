@@ -63,12 +63,13 @@ class logNode(object):
         self.callName = callName
     
     dependencyPara = ''
-    concernedPara = ''
+    concernedPara = []
     successStatus = ''
     
 class MatchingNode(object):
-    '匹配查找时使用的节点，包含了树节点，数据依赖的值'
-    def __init__(self, treeNode, dependencyPara):
+    '匹配查找时使用的节点，包含了树节点，数据依赖的值，以及要写入最终结果的参数（第一项为行为类别(0:文件类，1:注册表类,2:进程或线程...)，第二项为行为描述，第三项为要输出的具体参数'
+    def __init__(self, treeNode, dependencyPara, concernedPara = ['', '', '']):
         self.treeNode = treeNode
         self.dependencyPara = dependencyPara
+        self.concernedPara = concernedPara
     
