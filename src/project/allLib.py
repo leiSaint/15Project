@@ -45,13 +45,13 @@ callSet = ['NtSetValueKey', 'NtSetInformationFile.FileBasicInformation', 'NtCrea
              ]
 
 #定义各个系统调用node的创建方式，使用字典来存储，包括关注的参数及该参数对应的正则表达式和要去掉的字符,数字表示从系统调用名数起的行数
-parseDict = {'NtCreateFile': [{12:'=> .*? ', 'strip': '=> '},{11:'succeeded|failed'},{2:'\?\?.*?\"','strip':'\?\?\"'}, {8:'FILE_DIRECTORY_FILE|FILE_NON_DIRECTORY_FILE'}],
+parseDict = {'NtCreateFile': [{12:'=> .*? ', 'strip': '=> '},{11:'succeeded|failed'},{2:'\?\?.*?\"','strip':'\?\?\"'}, {8:'FILE_DIRECTORY_FILE||FILE_NON_DIRECTORY_FILE', 'strip':'|'}],
              'NtClose': [{0:'0x.*? ', 'strip': ' '}, {1:'succeeded|failed'}, {2:' ', 'strip': ' '}],
              'NtOpenFile': [{7: '=> .*? ', 'strip': '=> '}, {6:'succeeded|failed'}, {2:'\?\?.*?\"','strip':'\?\?\"'}], 
              'NtSetValueKey': [{0:'0x.*? '},{6:'succeeded|failed'},{1:'\".*?\"', 'strip':'\"'}],
              'NtSetInformationFile.FileBasicInformation':[{0:'0x.*? ', 'strip':' '},{5:'succeeded|failed'},{2:'0x.*? ', 'strip':' '}],
              'NtCreateKey': [{8:'=> .*? ', 'strip': '=> '},{7:'succeeded|failed'},{2:'".*?"'}],
-             'NtOpenProcessToken': [{5:'=> .*? ', 'strip': '=> '},{3:'succeeded|failed'},{0:'0x.*? '}],
+             'NtOpenProcessToken': [{4:'=> .*? ', 'strip': '=> '},{3:'succeeded|failed'},{0:'0x.*? '}],
              'NtOpenThreadToken': [{5:'=> .*? ', 'strip': '=> '},{3:'succeeded|failed'},{0:'0x.*? '}],
              'NtCreateUserProcess': [{12:'=> .*? ', 'strip': '=> '},{11:'succeeded|failed'},{1:'0x.*? '}],
              'NtSetInformationFile.FileDispositionInformation': [{0:'0x.*? ', 'strip': ' '}, {5:'succeeded|failed'}, {3:'0x.*? ', 'strip': ' '}],
@@ -60,13 +60,13 @@ parseDict = {'NtCreateFile': [{12:'=> .*? ', 'strip': '=> '},{11:'succeeded|fail
              'NtDeleteKey': [{0:'0x.*? '}, {1:'succeeded|failed'}, {2:'\?\?.*?\"','strip':'\?\?\"'}],
              'NtQueryValueKey': [{0:'0x.*? '}, {6:'succeeded|failed'}, {3:'0x.*? ', 'strip': ' '}, {1:'\".*?\"', 'strip': '\"'}],
              'NtOpenKeyEx': [{5: '=> .*? ', 'strip': '=> '}, {4:'succeeded|failed'}, {2:'\".*?\"', 'strip':'\"'}],
-             'NtOpenKey': [{5: '=> .*? ', 'strip': '=> '}, {4:'succeeded|failed'}, {2:'\".*?\"', 'strip':'\"'}],
+             'NtOpenKey': [{4: '=> .*? ', 'strip': '=> '}, {3:'succeeded|failed'}, {2:'\".*?\"', 'strip':'\"'}],
              'NtDeleteValueKey': [{0:'0x.*? ', 'strip': ' '}, {2:'succeeded|failed'}, {2:'\".*?\"', 'strip':'\"'}],
              'NtQueryDirectoryFile.FileBothDirectoryInformation':[{0:'0x.*? ', 'strip': ' '}, {11:'succeeded|failed'}, {9:'\".*?\"', 'strip':'\"'}],
-             'NtUnmapViewOfSection':[{0: '=> .*? ', 'strip': '=> '}, {2:'succeeded|failed'}, {3:'0x.*? ', 'strip': ' '}],
+             'NtUnmapViewOfSection':[{0:'0x.*? ', 'strip': ' '}, {2:'succeeded|failed'}, {3:'0x.*? ', 'strip': ' '}],
              'NtEnumerateKey.KeyBasicInformation': [{0:'0x.*? ', 'strip': ' '}, {6:'succeeded|failed'}, {8:'=> .*? ', 'strip': '=> '}],
-             'NtTerminateProcess': [{0: '=> .*? ', 'strip': '=> '}, {2:'succeeded|failed'}, {3:'0x.*? ', 'strip': ' '}],
+             'NtTerminateProcess': [{0:'0x.*? ', 'strip': ' '}, {2:'succeeded|failed'}, {3:'0x.*? ', 'strip': ' '}],
              'NtOpenProcess':[{5:'=> .*? ', 'strip': '=> '},{4:'succeeded|failed'}, {2:'name=.*?,', 'strip':'name=,'}],
-             'NtCreateSection':[{8:'=> .*? ', 'strip': '=> '}, {7:'succeeded|failed'}, {2:'\".*?\"', 'strip':'\"'}],
+             'NtCreateSection':[{8:'=> .*? ', 'strip': '=> '}, {7:'succeeded|failed'}, {2:'\".*?\"|<null>', 'strip':'\"'}],
              'NtMapViewOfSection':[{0:'0x.*? ', 'strip': ' '}, {10:'succeeded|failed'}, {1:'0x.*? ', 'strip': ' '}]
              }    

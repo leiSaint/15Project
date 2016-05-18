@@ -33,13 +33,18 @@ def parseLogToNodes(logPath, parseDict):
                         
                         for key in dicPara:
                             if isinstance(key, int):
-                                reSource = lines[lineCount + key]
+                                try:
+                                    reSource = lines[lineCount + key]
+                                except:
+                                    print("element out of range in lines[]")
+                                    break
                                 pattern = re.compile(dicPara[key])
                                 
                                 #获取到还未去除无关字符的参数字符串
-                                if re.search(pattern, reSource) is not None:
+                                try:
                                     tempPara = re.search(pattern, reSource).group(0)
-                                else:
+                                except:
+                                    print("parse error")
                                     break
                                 
                                 #如果有strip项，则切除无关字符

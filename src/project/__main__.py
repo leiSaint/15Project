@@ -19,9 +19,9 @@ from project.allLib import *
 from project.treeMatching import *
 
 #logPath = r'/Users/lei/Desktop/new report/drstrace.changeAttr.exe.04952.0000.log'
-#logPath = r'/Users/lei/Desktop/new report/drstrace.console_devil_server.exe.02840.0000.log'
+logPath = r'/Users/lei/Desktop/new report/drstrace.console_devil_server.exe.02840.0000.log'
 #logPath = r'/Users/lei/Desktop/new report/drstrace.queryValue.exe.03744.0000.log'
-logPath = sys.argv[1]
+#logPath = sys.argv[1]
 
 #先生成树
 searchTree = Tree()
@@ -34,5 +34,4 @@ for node in allStraces:
 
 #开始匹配
 results = treeMatching(allStraces, searchTree)
-for result in results:
-    print(result.concernedPara[1], result.concernedPara[2])
+print(len(results))

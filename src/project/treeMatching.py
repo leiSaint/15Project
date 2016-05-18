@@ -23,6 +23,16 @@ def find(curNode, newCall):
                     return curNode.leftChild[0].rightChild[i]
         else:
             return 0
+
+def popItemInOpenedRes(call, openedRes):
+    try:    
+        for i in range(len(openedRes)):
+            if openedRes[i].dependencyPara == call.dependencyPara:
+                openedRes.pop(i)
+    except:
+        print("call.callName:" + call.callName)
+    finally:
+        return openedRes
         
 def processAfterMatched(call, curMatchingNode):
     '''先分类，再根据参数等单独处理。最后如果有需要，则写入concernedPara[2]，其中存储了路径等信息'''
@@ -168,7 +178,8 @@ def treeMatching(allStraces, tree):
     
     curTreeRoot = MatchingNode(tree.root, 0)
     for call in allStraces:
-        #如果curMatchingNodes为空，则将curMatchingNode添加至其中        
+        #如果curMatchingNodes为空，则将curMatchingNode添加至其中
+        print(call.callName)        
         if len(curMatchingNodes) == 0:
             curMatchingNode = MatchingNode(tree.root, call.dependencyPara)
             processAfterMatched(call, curMatchingNode)
@@ -182,11 +193,16 @@ def treeMatching(allStraces, tree):
         for i in range(len(curMatchingNodes)):
             curMatchingNode = curMatchingNodes[i]
             if call.dependencyPara == curMatchingNode.dependencyPara:
+                print(curMatchingNode.treeNode.callName)
                 if find(curMatchingNode, call) != 0:
                     curMatchingNode.treeNode = find(curMatchingNode,call)
                     processAfterMatched(call, curMatchingNode)
-                    curMatchingNodes[i] = curMatchingNode                    
+                    curMatchingNodes[i] = curMatchingNode
                     found = 1
+                    
+                    #找到后，如果为NtClose，则从CurOpenedRes[]中删除对应dependencyPara的项
+                    if call.callName == 'NtClose':
+                        curOpenedRes = popItemInOpenedRes(call, curOpenedRes)
                     
                     #当前call的状态为failed，则在curMatchingNodes数组中弹出该节点
                     if call.successStatus == 'failed':
@@ -201,13 +217,19 @@ def treeMatching(allStraces, tree):
         #在curMatchingNodes中没有查找到，则从查找树的根重新查起            
         if found == 0:
             if find(curTreeRoot, call) != 0:
-                curMatchingNode = MatchingNode(find(tree.root, call), call.dependencyPara)
-                processAfterMatched(call, curMatchingNode)
-                curMatchingNodes.append(curMatchingNode)
+                if find(MatchingNode(tree.root, call.dependencyPara), call) != 0 and find(MatchingNode(tree.root, call.dependencyPara), call) is not None:
+                    curMatchingNode = MatchingNode(find(MatchingNode(tree.root, call.dependencyPara), call), call.dependencyPara)
+                    processAfterMatched(call, curMatchingNode)
+                    curMatchingNodes.append(curMatchingNode)
+                else: 
+                    continue
                 
                 #如果是打开资源操作，则将其添加至curOpenedRes中
                 if call.callName in NtOpenRes:
                     curOpenedRes.append(curMatchingNode)
+                    
+                if call.callName == 'NtClose':
+                    curOpenedRes = popItemInOpenedRes(call, curOpenedRes)
                     
                 #当前call的状态为failed，则在curMatchingNodes数组中弹出该节点
                 if call.successStatus == 'failed':
