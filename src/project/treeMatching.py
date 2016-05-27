@@ -7,33 +7,6 @@ from project.allLib import *
 from project.defDataStruct import *
 from project.parseLogToNodes import parseLogToNodes
 
-def find(curNode, newCall):
-#未找到时返回0，找到时返回匹配的节点#
-        #当前节点不可能为正在查找的节点，因为是从根节点开始查询的
-        curNode = curNode.treeNode
-        if len(curNode.leftChild) == 0:
-            return 0
-        elif curNode.leftChild[0].callName == newCall.callName:
-            return curNode.leftChild[0]
-        elif len(curNode.leftChild[0].rightChild) == 0:
-            return 0
-        elif curNode.leftChild[0].rightChild != []:
-            for i in range(len(curNode.leftChild[0].rightChild)):
-                if curNode.leftChild[0].rightChild[i].callName == newCall.callName:
-                    return curNode.leftChild[0].rightChild[i]
-        else:
-            return 0
-
-def popItemInOpenedRes(call, openedRes):
-    try:    
-        for i in range(len(openedRes)):
-            if openedRes[i].dependencyPara == call.dependencyPara:
-                openedRes.pop(i)
-    except:
-        print("call.callName:" + call.callName)
-    finally:
-        return openedRes
-        
 def processAfterMatched(call, curMatchingNode):
     '''先分类，再根据参数等单独处理。最后如果有需要，则写入concernedPara[2]，其中存储了路径等信息'''
     if call.callName == 'NtCreateFile':
@@ -165,6 +138,43 @@ def processAfterMatched(call, curMatchingNode):
         curMatchingNode.concernedPara[1] = 'create map view'
     
     
+
+def find(curNode, newCall):
+#未找到时返回0，找到时返回匹配的节点
+        #当前节点不可能为正在查找的节点，因为是从根节点开始查询的
+        curNode = curNode.treeNode
+        try:
+            if len(curNode.leftChild) == 0:
+                return 0
+            elif curNode.leftChild[0].callName == newCall.callName:
+                return curNode.leftChild[0]
+            elif len(curNode.leftChild[0].rightChild) == 0:
+                return 0
+            elif curNode.leftChild[0].rightChild != []:
+                for i in range(len(curNode.leftChild[0].rightChild)):
+                    if curNode.leftChild[0].rightChild[i].callName == newCall.callName:
+                        return curNode.leftChild[0].rightChild[i]
+                return 0
+            else:
+                return 0
+        except:
+            print('find error')
+
+def popItemInOpenedRes(call, openedRes):
+    indexes = []
+    try:    
+        for i in range(len(openedRes)):
+            if openedRes[i].dependencyPara == call.dependencyPara:
+                indexes.append(i)       
+    except:
+        print("call.callName:" + call.callName)
+    finally:
+        if len(indexes) > 0:
+            for i in indexes:
+                openedRes.pop(i)
+        return openedRes
+        
+
 def treeMatching(allStraces, tree):
     found = 0
     #因为可能有多个API同时执行，所以要保存指向每个API执行至的当前节点的指针
@@ -175,70 +185,137 @@ def treeMatching(allStraces, tree):
     
     #保存匹配结果，以数组结构存储指向最后结果的节点的指针
     resultNodes = []
+    unfinishedNodes = []
     
     curTreeRoot = MatchingNode(tree.root, 0)
     for call in allStraces:
         #如果curMatchingNodes为空，则将curMatchingNode添加至其中
-        print(call.callName)        
-        if len(curMatchingNodes) == 0:
-            curMatchingNode = MatchingNode(tree.root, call.dependencyPara)
-            processAfterMatched(call, curMatchingNode)
-            curMatchingNodes.append(curMatchingNode)
-            
-            #如果是打开资源操作，则将其添加至curOpenedRes中
-            if call.callName in NtOpenRes:
-                curOpenedRes.append(curMatchingNode)
+        print(call.callName)
+        if call.successStatus != 'failed':        
+            if len(curMatchingNodes) == 0:
+                curMatchingNode = MatchingNode(tree.root, call.dependencyPara)
+                processAfterMatched(call, curMatchingNode)
                 
-        #以依赖参数为主要依据，符合才会继续在curMatchingNodes中查找
-        for i in range(len(curMatchingNodes)):
-            curMatchingNode = curMatchingNodes[i]
-            if call.dependencyPara == curMatchingNode.dependencyPara:
-                print(curMatchingNode.treeNode.callName)
-                if find(curMatchingNode, call) != 0:
-                    curMatchingNode.treeNode = find(curMatchingNode,call)
-                    processAfterMatched(call, curMatchingNode)
-                    curMatchingNodes[i] = curMatchingNode
-                    found = 1
+                if curMatchingNode.concernedPara[2] == r'\Registry\Machine\Software\Policies\Microsoft\Windows\System':
+                    print('none type')
+                curMatchingNodes.append(curMatchingNode)
+                
+                #如果是打开资源操作，则先将curOpenedRes中相同依赖值的项删除，再将新资源添加至curOpenedRes中
+                if call.callName in NtOpenRes:
+                    popItemInOpenedRes(call, curOpenedRes)
+                    curOpenedRes.append(curMatchingNode)
                     
-                    #找到后，如果为NtClose，则从CurOpenedRes[]中删除对应dependencyPara的项
+            #以依赖参数为主要依据，符合才会继续在curMatchingNodes中查找
+            for i in range(len(curMatchingNodes)):
+                curMatchingNode = curMatchingNodes[i]
+                if call.dependencyPara == curMatchingNode.dependencyPara:
+                    print(curMatchingNode.treeNode.callName)
+                    if find(curMatchingNode, call) != 0:
+                        curMatchingNode.treeNode = find(curMatchingNode,call)
+                        processAfterMatched(call, curMatchingNode)
+                        curMatchingNodes[i] = curMatchingNode
+                        found = 1
+                        
+                        #找到后，如果为NtClose，则从CurOpenedRes[]中删除对应dependencyPara的项
+                        if call.callName == 'NtClose':
+                            curOpenedRes = popItemInOpenedRes(call, curOpenedRes)
+                        
+                        #已经到达树的最后，则将当前分支的叶子节点添加至resultNodes中，并弹出curMatchingNodes中的当前节点                    
+                        else:
+                            if curMatchingNode.treeNode.leftChild[0].callName[:4] == 'leaf' and (len(curMatchingNode.treeNode.leftChild[0].rightChild) == 0):
+                                curMatchingNode.concernedPara[1] = curMatchingNode.treeNode.leftChild[0].callName[4:]
+                                resultNodes.append(curMatchingNode)
+                                curMatchingNodes.pop(i)
+                        break
+            
+            #如果未找到，则在打开的资源中查找，因为有可能是对同一资源进行的另一种操作
+            if found == 0:
+                for i in range(len(curOpenedRes)):
+                    curMatchingNode = curOpenedRes[i]
+                    if call.dependencyPara == curMatchingNode.dependencyPara:
+                        #print(curMatchingNode.treeNode.callName)
+                        if find(curMatchingNode, call) != 0:
+                            curMatchingNode.treeNode = find(curMatchingNode,call)
+                            processAfterMatched(call, curMatchingNode)
+                            curMatchingNodes[i] = curMatchingNode
+                            found = 1
+                            
+                            #找到后，如果为NtClose，则从CurOpenedRes[]中删除对应dependencyPara的项
+                            if call.callName == 'NtClose':
+                                curOpenedRes = popItemInOpenedRes(call, curOpenedRes)
+                            
+                            #已经到达树的最后，则将当前分支的叶子节点添加至resultNodes中，并弹出curMatchingNodes中的当前节点
+                            elif curMatchingNode.treeNode.leftChild[0].callName[:4] == 'leaf' and (len(curMatchingNode.treeNode.leftChild[0].rightChild) == 0):
+                                curMatchingNode.concernedPara[1] = curMatchingNode.treeNode.leftChild[0].callName[4:]
+                                resultNodes.append(curMatchingNode)
+                                curMatchingNodes.pop(i)
+                            break        
+                    
+            #在curMatchingNodes中没有查找到，则从查找树的根重新查起            
+            if found == 0:
+                if find(curTreeRoot, call) != 0:
+                    if find(MatchingNode(tree.root, call.dependencyPara), call) != 0 and find(MatchingNode(tree.root, call.dependencyPara), call) is not None:
+                        curMatchingNode = MatchingNode(find(MatchingNode(tree.root, call.dependencyPara), call), call.dependencyPara)
+                        processAfterMatched(call, curMatchingNode)
+                        curMatchingNodes.append(curMatchingNode)
+                    else: 
+                        continue
+                    
+                    #如果是打开资源操作，则将其添加至curOpenedRes中
+                    if call.callName in NtOpenRes:
+                        popItemInOpenedRes(call, curOpenedRes)
+                        curOpenedRes.append(curMatchingNode)
+                        
                     if call.callName == 'NtClose':
                         curOpenedRes = popItemInOpenedRes(call, curOpenedRes)
                     
-                    #当前call的状态为failed，则在curMatchingNodes数组中弹出该节点
-                    if call.successStatus == 'failed':
-                        curMatchingNodes.pop(i)
-                    
                     #已经到达树的最后，则将当前分支的叶子节点添加至resultNodes中，并弹出curMatchingNodes中的当前节点
                     if curMatchingNode.treeNode.leftChild[0].callName[:4] == 'leaf' and (len(curMatchingNode.treeNode.leftChild[0].rightChild) == 0):
+                        curMatchingNode.concernedPara[1] = curMatchingNode.treeNode.leftChild[0].callName[4:]
                         resultNodes.append(curMatchingNode)
-                        curMatchingNodes.pop(i)
-                    break
-                
-        #在curMatchingNodes中没有查找到，则从查找树的根重新查起            
-        if found == 0:
-            if find(curTreeRoot, call) != 0:
-                if find(MatchingNode(tree.root, call.dependencyPara), call) != 0 and find(MatchingNode(tree.root, call.dependencyPara), call) is not None:
-                    curMatchingNode = MatchingNode(find(MatchingNode(tree.root, call.dependencyPara), call), call.dependencyPara)
-                    processAfterMatched(call, curMatchingNode)
-                    curMatchingNodes.append(curMatchingNode)
-                else: 
-                    continue
-                
-                #如果是打开资源操作，则将其添加至curOpenedRes中
-                if call.callName in NtOpenRes:
-                    curOpenedRes.append(curMatchingNode)
-                    
-                if call.callName == 'NtClose':
-                    curOpenedRes = popItemInOpenedRes(call, curOpenedRes)
-                    
-                #当前call的状态为failed，则在curMatchingNodes数组中弹出该节点
-                if call.successStatus == 'failed':
-                    curMatchingNodes.pop(-1)
-                
-                #已经到达树的最后，则将当前分支的叶子节点添加至resultNodes中，并弹出curMatchingNodes中的当前节点
-                if curMatchingNode.treeNode.leftChild[0].callName[:4] == 'leaf' and (len(curMatchingNode.treeNode.leftChild[0].rightChild) == 0):
-                    resultNodes.append(curMatchingNode)
-                    curMatchingNodes.pop(-1)
-        found = 0
-    return curMatchingNodes
+                        curMatchingNodes.pop(-1)
+            found = 0
+    
+    #添加前先检查下个节点是否是leaf，或者下个节点是NtClose，下下个节点是leaf这两种情况，是的话则加入到resultNodes, 如果都不匹配，则将其加入unfinishedNodes中
+    closeFlag = 0
+    finishedFlag = 0
+    
+    for lastNode in curMatchingNodes:
+        if len(lastNode.treeNode.leftChild) != 0:
+            if lastNode.treeNode.leftChild[0].callName[:4] == 'leaf':
+                lastNode.concernedPara[1] = lastNode.treeNode.leftChild[0].callName[4:]
+                resultNodes.append(lastNode)
+                finishedFlag = 1
+            elif len(lastNode.treeNode.leftChild[0].rightChild) != 0:
+                for node in lastNode.treeNode.leftChild[0].rightChild:
+                    if node.callName[:4] == 'leaf':
+                        lastNode.concernedPara[1] = node.callName[4:]
+                        resultNodes.append(lastNode)
+                        finishedFlag = 1
+                        break
+            else:
+                if lastNode.treeNode.leftChild[0].callName == 'NtClose':
+                    closeFlag = 1
+                elif len(lastNode.treeNode.leftChild[0].rightChild) != 0:
+                    for node in lastNode.treeNode.leftChild[0].rightChild:
+                        if node.callName == 'NtClose':
+                            closeFlag = 1
+                if closeFlag == 1:
+                    if lastNode.treeNode.leftChild[0].leftChild[0].callName[:4] == 'leaf':
+                        lastNode.concernedPara[1] = lastNode.treeNode.leftChild[0].leftChild[0].callName[4:]
+                        resultNodes.append(lastNode)
+                        finishedFlag = 1
+                    elif len(lastNode.treeNode.leftChild[0].leftChild[0].rightChild) != 0:
+                        for node in lastNode.treeNode.leftChild[0].leftChild[0].rightChild:
+                            if node.callName[:4] == 'leaf':
+                                lastNode.concernedPara[1] = node.callName[4:]
+                                resultNodes.append(lastNode)
+                                finishedFlag = 1
+        
+        if finishedFlag == 0:
+            unfinishedNodes.append(lastNode)
+        closeFlag = 0
+        finishedFlag = 0
+    
+    return resultNodes
 

@@ -49,7 +49,7 @@ class Tree(object):
             return 'rightChild', -1
         elif curNode.leftChild[0].rightChild != []:
             for i in range(len(curNode.leftChild[0].rightChild)):
-                if curNode.leftChild[0].rightChild[i] == newCall:
+                if curNode.leftChild[0].rightChild[i].callName == newCall:
                     return 'rightChild', i
             return 'rightChild', -1
         
@@ -60,16 +60,15 @@ class Tree(object):
 class logNode(object):
     '解析log文件获取到的节点类，包含了函数名和获得到的各项参数'
     def __init__(self, callName):
-        self.callName = callName
-    
-    dependencyPara = ''
-    concernedPara = []
-    successStatus = ''
+        self.callName = callName  
+        self.dependencyPara = ''
+        self.concernedPara = []
+        self.successStatus = ''
     
 class MatchingNode(object):
     '匹配查找时使用的节点，包含了树节点，数据依赖的值，以及要写入最终结果的参数（第一项为行为类别(0:文件类，1:注册表类,2:进程或线程...)，第二项为行为描述，第三项为要输出的具体参数'
-    def __init__(self, treeNode, dependencyPara, concernedPara = ['', '', '']):
+    def __init__(self, treeNode, dependencyPara):
         self.treeNode = treeNode
         self.dependencyPara = dependencyPara
-        self.concernedPara = concernedPara
+        self.concernedPara = ['', '', '']
     

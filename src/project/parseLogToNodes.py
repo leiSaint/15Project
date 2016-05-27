@@ -29,6 +29,7 @@ def parseLogToNodes(logPath, parseDict):
                     #开始解析parseDict中定义的关注参数，并将结果存放至NtCallNodes列表中
                     #paraCount指示当前处理的是调用名键对应的列表类型键值的第几项，dicPara指向其中的一个字典成员
                     paraCount = 0
+                    errorFlag = 0
                     for dicPara in parseValue:
                         
                         for key in dicPara:
@@ -37,6 +38,7 @@ def parseLogToNodes(logPath, parseDict):
                                     reSource = lines[lineCount + key]
                                 except:
                                     print("element out of range in lines[]")
+                                    errorFlag = 1
                                     break
                                 pattern = re.compile(dicPara[key])
                                 
@@ -44,7 +46,9 @@ def parseLogToNodes(logPath, parseDict):
                                 try:
                                     tempPara = re.search(pattern, reSource).group(0)
                                 except:
-                                    print("parse error")
+                                    if node.callName != 'NtCreateFile':
+                                        print("parse error")
+                                    errorFlag = 1
                                     break
                                 
                                 #如果有strip项，则切除无关字符
@@ -52,20 +56,20 @@ def parseLogToNodes(logPath, parseDict):
                                     realPara = tempPara.strip(dicPara['strip'])
                                 else:
                                     realPara = tempPara
-                        if paraCount == 0:
-                            node.dependencyPara = realPara
-                        if paraCount == 1:
-                            node.successStatus = realPara
-                        if paraCount >= 2:
-                            node.concernedPara.append(realPara)                                                        
+                        if errorFlag is not 1:
+                            if paraCount == 0:
+                                node.dependencyPara = realPara
+                            if paraCount == 1:
+                                node.successStatus = realPara
+                            if paraCount >= 2:
+                                node.concernedPara.append(realPara)
+                        if errorFlag == 1 and (node.callName == 'NtTerminateProcess' or node.callName == 'NtTerminateThread'):
+                            node.successStatus == 'succeeded'
+                            node.concernedPara = '0x0'                                                        
                         paraCount += 1
+                        errorFlag = 0
                     #将填充完的node添加至列表
                     NtCallNodes.append(node)
                 else:
                     continue
     return NtCallNodes
-
-'''nodes = parseLogToNodes(logPath, parseDict)
-print(len(nodes))
-for node in nodes:
-    print(node.dependencyPara, node.successStatus,node.concernedPara)        '''    
