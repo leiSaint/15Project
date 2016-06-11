@@ -76,3 +76,5 @@ parseDict = {'NtCreateFile': [{12:'=> .*? ', 'strip': '=> '},{11:'succeeded|fail
              'NtCreateSection':[{8:'=> .*? ', 'strip': '=> '}, {7:'succeeded|failed'}, {2:'\".*?\"|<null>', 'strip':'\"'}],
              'NtMapViewOfSection':[{0:'0x.*? ', 'strip': ' '}, {10:'succeeded|failed'}, {1:'0x.*? ', 'strip': ' '}]
              }    
+
+leafSet = ['leafCreateToolhelp32SnapShot&CloseHandle', 'leafFindNextFile', ]

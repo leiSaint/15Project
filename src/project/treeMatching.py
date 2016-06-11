@@ -223,7 +223,8 @@ def treeMatching(allStraces, tree):
                         #已经到达树的最后，则将当前分支的叶子节点添加至resultNodes中，并弹出curMatchingNodes中的当前节点                    
                         else:
                             if curMatchingNode.treeNode.leftChild[0].callName[:4] == 'leaf' and (len(curMatchingNode.treeNode.leftChild[0].rightChild) == 0):
-                                curMatchingNode.concernedPara[1] = curMatchingNode.treeNode.leftChild[0].callName[4:]
+                                if curMatchingNode.treeNode.leftChild[0].callName in leafSet:
+                                    curMatchingNode.concernedPara[1] = curMatchingNode.treeNode.leftChild[0].callName[4:]
                                 resultNodes.append(curMatchingNode)
                                 curMatchingNodes.pop(i)
                         break
@@ -246,7 +247,8 @@ def treeMatching(allStraces, tree):
                             
                             #已经到达树的最后，则将当前分支的叶子节点添加至resultNodes中，并弹出curMatchingNodes中的当前节点
                             elif curMatchingNode.treeNode.leftChild[0].callName[:4] == 'leaf' and (len(curMatchingNode.treeNode.leftChild[0].rightChild) == 0):
-                                curMatchingNode.concernedPara[1] = curMatchingNode.treeNode.leftChild[0].callName[4:]
+                                if curMatchingNode.treeNode.leftChild[0].callName in leafSet:
+                                    curMatchingNode.concernedPara[1] = curMatchingNode.treeNode.leftChild[0].callName[4:]
                                 resultNodes.append(curMatchingNode)
                                 curMatchingNodes.pop(i)
                             break        
@@ -271,7 +273,8 @@ def treeMatching(allStraces, tree):
                     
                     #已经到达树的最后，则将当前分支的叶子节点添加至resultNodes中，并弹出curMatchingNodes中的当前节点
                     if curMatchingNode.treeNode.leftChild[0].callName[:4] == 'leaf' and (len(curMatchingNode.treeNode.leftChild[0].rightChild) == 0):
-                        curMatchingNode.concernedPara[1] = curMatchingNode.treeNode.leftChild[0].callName[4:]
+                        if curMatchingNode.treeNode.leftChild[0].callName in leafSet:
+                            curMatchingNode.concernedPara[1] = curMatchingNode.treeNode.leftChild[0].callName[4:]
                         resultNodes.append(curMatchingNode)
                         curMatchingNodes.pop(-1)
             found = 0
@@ -283,7 +286,8 @@ def treeMatching(allStraces, tree):
     for lastNode in curMatchingNodes:
         if len(lastNode.treeNode.leftChild) != 0:
             if lastNode.treeNode.leftChild[0].callName[:4] == 'leaf':
-                lastNode.concernedPara[1] = lastNode.treeNode.leftChild[0].callName[4:]
+                if lastNode.treeNode.leftChild[0].callName in leafSet:
+                    lastNode.concernedPara[1] = lastNode.treeNode.leftChild[0].callName[4:]
                 resultNodes.append(lastNode)
                 finishedFlag = 1
             elif len(lastNode.treeNode.leftChild[0].rightChild) != 0:
@@ -302,13 +306,15 @@ def treeMatching(allStraces, tree):
                             closeFlag = 1
                 if closeFlag == 1:
                     if lastNode.treeNode.leftChild[0].leftChild[0].callName[:4] == 'leaf':
-                        lastNode.concernedPara[1] = lastNode.treeNode.leftChild[0].leftChild[0].callName[4:]
+                        if lastNode.treeNode.leftChild[0].leftChild[0].callName in leafSet:
+                            lastNode.concernedPara[1] = lastNode.treeNode.leftChild[0].leftChild[0].callName[4:]
                         resultNodes.append(lastNode)
                         finishedFlag = 1
                     elif len(lastNode.treeNode.leftChild[0].leftChild[0].rightChild) != 0:
                         for node in lastNode.treeNode.leftChild[0].leftChild[0].rightChild:
                             if node.callName[:4] == 'leaf':
-                                lastNode.concernedPara[1] = node.callName[4:]
+                                if node.callName in leafSet:
+                                    lastNode.concernedPara[1] = node.callName[4:]
                                 resultNodes.append(lastNode)
                                 finishedFlag = 1
         
