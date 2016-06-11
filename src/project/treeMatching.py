@@ -293,7 +293,8 @@ def treeMatching(allStraces, tree):
             elif len(lastNode.treeNode.leftChild[0].rightChild) != 0:
                 for node in lastNode.treeNode.leftChild[0].rightChild:
                     if node.callName[:4] == 'leaf':
-                        lastNode.concernedPara[1] = node.callName[4:]
+                        if node.callName in leafSet:
+                            lastNode.concernedPara[1] = node.callName[4:]
                         resultNodes.append(lastNode)
                         finishedFlag = 1
                         break
