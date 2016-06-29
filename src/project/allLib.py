@@ -14,9 +14,9 @@ NtOpenRes = ['NtOpenThreadToken', 'NtOpenProcess', 'NtOpenProcessToken', 'NtCrea
 #建立系统调用链库，从链的第一个调用开始，到该链代表的API名字节点结束
 NtCallsTree = [
                ['NtOpenFile', 'leafOpenFile'],
-               ['NtOpenFile', 'NtClose', 'LeafOpenFile'],
-               ['NtOpenFile', 'NtSetInformationFile.FileBasicInformation', 'NtClose', 'LeafSetFileAttributes'],
-               ['NtOpenFile', 'NtQueryInformationFile.FileDispositionInformation', 'NtClose', 'leafDeleteFileOrDir'],
+               ['NtOpenFile', 'NtClose', 'leafOpenFile'],
+               ['NtOpenFile', 'NtSetInformationFile.FileBasicInformation', 'NtClose', 'leafSetFileAttributes'],
+               ['NtOpenFile', 'NtSetInformationFile.FileDispositionInformation', 'NtClose', 'leafDeleteFileOrDir'],
                ['NtOpenFile', 'NtQueryDirectoryFile.FileBothDirectoryInformation', 'NtClose', 'leafFindFirstFile'],
                ['NtOpenFile', 'NtQueryDirectoryFile.FileBothDirectoryInformation', 'NtQueryDirectoryFile.FileBothDirectoryInformation', 'NtClose', 'leafFindNextFile'],
                ['NtCreateFile', 'NtWriteFile', 'NtClose', 'leafWriteFile'],
@@ -60,7 +60,7 @@ parseDict = {'NtCreateFile': [{12:'=> .*? ', 'strip': '=> '},{11:'succeeded|fail
              'NtOpenProcessTokenEx': [{5:'=> .*? ', 'strip': '=> '},{4:'succeeded|failed'},{0:'0x.*? '}],
              'NtOpenThreadToken': [{5:'=> .*? ', 'strip': '=> '},{3:'succeeded|failed'},{0:'0x.*? '}],
              'NtCreateUserProcess': [{12:'=> .*? ', 'strip': '=> '},{11:'succeeded|failed'},{1:'0x.*? '}],
-             'NtSetInformationFile.FileDispositionInformation': [{0:'0x.*? ', 'strip': ' '}, {5:'succeeded|failed'}, {3:'0x.*? ', 'strip': ' '}],
+             'NtSetInformationFile.FileDispositionInformation': [{0:'0x.*? ', 'strip': ' '}, {5:'succeeded|failed'}, {4:'0x.*? ', 'strip': ' '}],
              'NtWriteFile': [{0:'0x.*? '},{9:'succeeded|failed'},{5:'0x.*? '}],
              'NtCreateThreadEx': [{12:'=> .*? ', 'strip': '=> '},{11:'succeeded|failed'},{3:'0x.*? '}],
              'NtDeleteKey': [{0:'0x.*? '}, {1:'succeeded|failed'}, {2:'\?\?.*?\"','strip':'\?\?\"'}],
@@ -77,4 +77,10 @@ parseDict = {'NtCreateFile': [{12:'=> .*? ', 'strip': '=> '},{11:'succeeded|fail
              'NtMapViewOfSection':[{0:'0x.*? ', 'strip': ' '}, {10:'succeeded|failed'}, {1:'0x.*? ', 'strip': ' '}]
              }    
 
-leafSet = ['leafCreateToolhelp32SnapShot&CloseHandle', 'leafFindNextFile', ]
+leafSet = ['leafCreateToolhelp32SnapShot&CloseHandle', 'leafFindNextFile']
+
+#分类用到的库，字典结构，键为API名称，键值为数组，每个元素为一个字典，键为指标的类别，键值为对应的API的参数
+classifyDict = {'open or create a key':[{5:[r'Software\Microsoft\Windows\Currentversion\run', r'Software\Microsoft\Windows\Currentversion\runonce', r'Software\Microsoft\Windows\Currentversion\Policies\Explorer\run', r'HKLM\Software\Microsoft\Windows\Currentversion\Explorer\Browser Helper Objects', r'HKLM\Software\Microsoft\Windows\Currentversion\Explorer\Shellexecutehooks', r'HKLM\Software\Microsoft\Windows NT\Currentversion\Windows\Appinit Dlls', r'HKLM\Software\Microsoft\Windows NT\Currentversion\Winlogon\Notify', r'Software\Microsoft\Windows\Currentversion\Policies\Explorer\Run', r'Software\Microsoft\Active Setup\Installed Components', r'']}], 
+                'change file attribute':[{6:[r'sample address']}], 
+                'delete file':[{6:[r'sample address']}],
+                'open or create file':[{4:['flash disk']}]}

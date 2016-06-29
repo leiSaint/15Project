@@ -20,9 +20,10 @@ from project.treeMatching import *
 
 #logPath = r'/Users/lei/Desktop/new report/drstrace.changeAttr.exe.04952.0000.log'
 #logPath = r'/Users/lei/Desktop/new report/drstrace.console_devil_server.exe.02840.0000.log'
-logPath = r'/Users/lei/Desktop/drstrace.console_devil_server.exe.02840.0000.log'
 #logPath = r'/Users/lei/Desktop/new report/drstrace.queryValue.exe.03744.0000.log'
 #logPath = sys.argv[1]
+logPath = r'/Users/lei/Desktop/drstrace.console_devil_server.exe.02840.0000.log'
+sampleAddress = r'c:\TrojanHorse\console_devil_server.exe'
 
 #先生成树
 searchTree = Tree()
@@ -38,3 +39,9 @@ results = treeMatching(allStraces, searchTree)
 print(len(results))
 for result in results:
     print(result.concernedPara[0],result.concernedPara[1], result.concernedPara[2])
+    
+#进行分类
+for result in results:
+    classifyResult = behaviorClassify(result)
+    if classifyResult[0] is not '':
+        print(classifyResult[0],classifyResult[1],classifyResult[2])

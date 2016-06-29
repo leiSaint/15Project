@@ -6,6 +6,27 @@ Created on 2016年3月20日
 from project.allLib import *
 from project.defDataStruct import *
 from project.parseLogToNodes import parseLogToNodes
+#from project.__main__ import sampleAddress
+sampleAddress = r'c:\TrojanHorse\console_devil_server.exe'
+
+def getFlashDiskPath():
+    
+
+def behaviorClassify(resultNode):
+    '''输入查找树完成后的节点，将其根据ClassifyDict定义的类别信息进行分类，返回分类后的信息，包括类别，API名称，API参数'''
+    classifyResult = ['', '', '']
+    if resultNode.concernedPara[1] in classifyDict:
+        classParaList = classifyDict[resultNode.concernedPara[1]]
+        for classPara in classParaList:
+            if resultNode.concernedPara[2] == sampleAddress and 'sample address' in list(classPara.values())[0]:
+                classifyResult[0] = list(classPara.keys())[0]
+                classifyResult[1] = resultNode.concernedPara[1]
+                classifyResult[2] = resultNode.concernedPara[2]
+            if resultNode.concernedPara[2] in list(classPara.values())[0]:
+                classifyResult[0] = list(classPara.keys())[0]
+                classifyResult[1] = resultNode.concernedPara[1]
+                classifyResult[2] = resultNode.concernedPara[2]            
+    return classifyResult
 
 def processAfterMatched(call, curMatchingNode):
     '''先分类，再根据参数等单独处理。最后如果有需要，则写入concernedPara[2]，其中存储了路径等信息'''
@@ -27,14 +48,13 @@ def processAfterMatched(call, curMatchingNode):
         curMatchingNode.concernedPara[1] = 'change file attribute'
     
     if call.callName == 'NtClose':
-        '''TODO: add function to delete item which have same dependencyPara in openedRes'''
         curMatchingNode.dependencyPara = 0xffff
     
     if call.callName == 'NtSetValueKey':
         curMatchingNode.concernedPara[0] = '1'
-        if curMatchingNode.concernedPara[2] == r'Software\\Microsoft\\Windows\\CurrentVersion\\Run':
-             curMatchingNode.concernedPara[1] = 'create a autostart item'
-        curMatchingNode.concernedPara[2].append(r'\\' + call.concernedPara[0])
+        if call.concernedPara[0] == r'"Software\Microsoft\Windows\Currentversion\run"':
+            curMatchingNode.concernedPara[1] = 'create a autostart item'
+        curMatchingNode.concernedPara[2].append('\\' + call.concernedPara[0])
     
     if call.callName == 'NtCreateKey':
         curMatchingNode.concernedPara[0] = '1'
@@ -61,7 +81,7 @@ def processAfterMatched(call, curMatchingNode):
     
     if call.callName == 'NtSetInformationFile.FileDispositionInformation':
         curMatchingNode.concernedPara[0] = '0'        
-        if curMatchingNode.concernedPara[2] == '0xd':
+        if call.concernedPara[0] == '0xd':
             curMatchingNode.concernedPara[1] = 'delete file'
         
     if call.callName == 'NtWriteFile':
@@ -220,13 +240,12 @@ def treeMatching(allStraces, tree):
                         if call.callName == 'NtClose':
                             curOpenedRes = popItemInOpenedRes(call, curOpenedRes)
                         
-                        #已经到达树的最后，则将当前分支的叶子节点添加至resultNodes中，并弹出curMatchingNodes中的当前节点                    
-                        else:
-                            if curMatchingNode.treeNode.leftChild[0].callName[:4] == 'leaf' and (len(curMatchingNode.treeNode.leftChild[0].rightChild) == 0):
-                                if curMatchingNode.treeNode.leftChild[0].callName in leafSet:
-                                    curMatchingNode.concernedPara[1] = curMatchingNode.treeNode.leftChild[0].callName[4:]
-                                resultNodes.append(curMatchingNode)
-                                curMatchingNodes.pop(i)
+                        #已经到达树的最后，则将当前分支的叶子节点添加至resultNodes中，并弹出curMatchingNodes中的当前节点 
+                        if curMatchingNode.treeNode.leftChild[0].callName[:4] == 'leaf' and (len(curMatchingNode.treeNode.leftChild[0].rightChild) == 0):
+                            if curMatchingNode.treeNode.leftChild[0].callName in leafSet:
+                                curMatchingNode.concernedPara[1] = curMatchingNode.treeNode.leftChild[0].callName[4:]
+                            resultNodes.append(curMatchingNode)
+                            curMatchingNodes.pop(i)
                         break
             
             #如果未找到，则在打开的资源中查找，因为有可能是对同一资源进行的另一种操作
@@ -246,7 +265,7 @@ def treeMatching(allStraces, tree):
                                 curOpenedRes = popItemInOpenedRes(call, curOpenedRes)
                             
                             #已经到达树的最后，则将当前分支的叶子节点添加至resultNodes中，并弹出curMatchingNodes中的当前节点
-                            elif curMatchingNode.treeNode.leftChild[0].callName[:4] == 'leaf' and (len(curMatchingNode.treeNode.leftChild[0].rightChild) == 0):
+                            if curMatchingNode.treeNode.leftChild[0].callName[:4] == 'leaf' and (len(curMatchingNode.treeNode.leftChild[0].rightChild) == 0):
                                 if curMatchingNode.treeNode.leftChild[0].callName in leafSet:
                                     curMatchingNode.concernedPara[1] = curMatchingNode.treeNode.leftChild[0].callName[4:]
                                 resultNodes.append(curMatchingNode)
