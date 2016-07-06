@@ -80,7 +80,17 @@ parseDict = {'NtCreateFile': [{12:'=> .*? ', 'strip': '=> '},{11:'succeeded|fail
 leafSet = ['leafCreateToolhelp32SnapShot&CloseHandle', 'leafFindNextFile']
 
 #分类用到的库，字典结构，键为API名称，键值为数组，每个元素为一个字典，键为指标的类别，键值为对应的API的参数
-classifyDict = {'open or create a key':[{5:[r'Software\Microsoft\Windows\Currentversion\run', r'Software\Microsoft\Windows\Currentversion\runonce', r'Software\Microsoft\Windows\Currentversion\Policies\Explorer\run', r'HKLM\Software\Microsoft\Windows\Currentversion\Explorer\Browser Helper Objects', r'HKLM\Software\Microsoft\Windows\Currentversion\Explorer\Shellexecutehooks', r'HKLM\Software\Microsoft\Windows NT\Currentversion\Windows\Appinit Dlls', r'HKLM\Software\Microsoft\Windows NT\Currentversion\Winlogon\Notify', r'Software\Microsoft\Windows\Currentversion\Policies\Explorer\Run', r'Software\Microsoft\Active Setup\Installed Components', r'']}], 
+classifyDict = {'open or create a key':[{5:[r'.*Software\\Microsoft\\Windows\\Currentversion\\run.*',
+                                             r'.*Software\\Microsoft\\Windows\\Currentversion\\runonce.*', 
+                                             r'.*Software\\Microsoft\\Windows\\Currentversion\\Policies\\Explorer\\run.*', 
+                                             r'.*Software\\Microsoft\\Windows\\Currentversion\\Explorer\\Browser Helper Objects.*', 
+                                             r'.*Software\\Microsoft\\Windows\\Currentversion\\Explorer\\Shellexecutehooks.*', 
+                                             r'.*Software\\Microsoft\\Windows NT\\Currentversion\\Windows\\Appinit Dlls.*', 
+                                             r'.*Software\\Microsoft\\Windows NT\\Currentversion\\Winlogon\\Notify.*', 
+                                             r'.*Software\\Microsoft\\Windows\\Currentversion\\Policies\\Explorer\\Run.*', 
+                                             r'.*Software\\Microsoft\\Active Setup\\Installed Components.*']}], 
                 'change file attribute':[{6:[r'sample address']}], 
                 'delete file':[{6:[r'sample address']}],
-                'open or create file':[{4:['flash disk']}]}
+                'open or create file':[{4:['flash disk']}],
+                'CreateToolhelp32SnapShot&CloseHandle':[{2:['*']}],
+                'query value of key':[{2:['.*vmware.*', '.*virtualbox.*']}]}

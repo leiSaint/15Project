@@ -3,29 +3,67 @@ Created on 2016年3月20日
 
 @author: lei
 '''
+import re
 from project.allLib import *
 from project.defDataStruct import *
 from project.parseLogToNodes import parseLogToNodes
 #from project.__main__ import sampleAddress
 sampleAddress = r'c:\TrojanHorse\console_devil_server.exe'
 
-def getFlashDiskPath():
+#def getFlashDiskPath():
+def verifyClassifyResult(classifyResult):
+    #检查是否设置为隐藏
+    if classifyResult[1] is 'change file attribute':
+        #TODO:使用win32file查询属性，&2后不为0，则为隐藏文件
+        return 0
+    return 0
     
 
 def behaviorClassify(resultNode):
     '''输入查找树完成后的节点，将其根据ClassifyDict定义的类别信息进行分类，返回分类后的信息，包括类别，API名称，API参数'''
     classifyResult = ['', '', '']
+    #resultNode.concernedPara[1]表示API名称
     if resultNode.concernedPara[1] in classifyDict:
+        
         classParaList = classifyDict[resultNode.concernedPara[1]]
+        #classPara 表示API名称对应的一个字典
         for classPara in classParaList:
+            resultParas = []
+            patterns = []
+            #先判断是否是sample address或*
             if resultNode.concernedPara[2] == sampleAddress and 'sample address' in list(classPara.values())[0]:
                 classifyResult[0] = list(classPara.keys())[0]
                 classifyResult[1] = resultNode.concernedPara[1]
                 classifyResult[2] = resultNode.concernedPara[2]
-            if resultNode.concernedPara[2] in list(classPara.values())[0]:
+            elif '*' in list(classPara.values())[0]:
                 classifyResult[0] = list(classPara.keys())[0]
                 classifyResult[1] = resultNode.concernedPara[1]
-                classifyResult[2] = resultNode.concernedPara[2]            
+                classifyResult[2] = resultNode.concernedPara[2]    
+            else:
+                for item in list(classPara.values())[0]:
+                    pattern = re.compile(item, re.IGNORECASE)
+                    patterns.append(pattern)
+                for item in patterns:
+                    tempPara = item.match(resultNode.concernedPara[2])
+                    if tempPara:
+                        resultParas.append(tempPara.group(0))    
+            
+        #如果匹配结果存在，则按情况选择正确的匹配结果
+        if len(resultParas) is not 0:
+            if len(resultParas) is 1:
+                resultPara = resultParas[0]
+            #匹配结果不止一个时，选择最长的那一个
+            if len(resultParas) > 1:
+                temp = resultParas[0]
+                for para in resultParas:
+                    if len(para) > len(temp):
+                        temp = para
+                resultPara = temp
+            
+            classifyResult[0] = list(classPara.keys())[0]
+            classifyResult[1] = resultNode.concernedPara[1]
+            classifyResult[2] = resultNode.concernedPara[2]
+            
     return classifyResult
 
 def processAfterMatched(call, curMatchingNode):
